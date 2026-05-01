@@ -126,7 +126,7 @@ export default function SemesterCgpaTab({
             value={semesterStats.cgpa.toFixed(2)}
             tone="success"
           />
-          <div className="min-w-[220px] flex-1">
+          <div className="min-w-55 flex-1">
             <Input
               label="Semester Name"
               value={semesterName}

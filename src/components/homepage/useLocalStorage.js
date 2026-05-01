@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export function useLocalStorage(key, initialValue) {
+  const initialRef = useRef(initialValue);
   const [value, setValue] = useState(initialValue);
   const [hydrated, setHydrated] = useState(false);
 
@@ -14,11 +15,11 @@ export function useLocalStorage(key, initialValue) {
       try {
         setValue(JSON.parse(stored));
       } catch {
-        setValue(initialValue);
+        setValue(initialRef.current);
       }
     }
     setHydrated(true);
-  }, [key, initialValue]);
+  }, [key]);
 
   useEffect(() => {
     if (!hydrated || typeof window === "undefined") return;

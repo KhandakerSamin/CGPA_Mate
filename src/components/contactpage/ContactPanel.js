@@ -1,8 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { Button, Input } from "@/components/homepage/ui";
 
 export default function ContactPanel({ open, onClose }) {
+  const [form, setForm] = useState({ name: "", email: "", message: "" });
+
   if (!open) return null;
 
   return (
@@ -22,14 +25,28 @@ export default function ContactPanel({ open, onClose }) {
           </Button>
         </div>
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
-          <Input label="Name" value="" onChange={() => {}} placeholder="" />
-          <Input label="Email" value="" onChange={() => {}} placeholder="" />
+          <Input
+            label="Name"
+            value={form.name}
+            onChange={(value) => setForm((prev) => ({ ...prev, name: value }))}
+            placeholder=""
+          />
+          <Input
+            label="Email"
+            value={form.email}
+            onChange={(value) => setForm((prev) => ({ ...prev, email: value }))}
+            placeholder=""
+          />
         </div>
         <label className="mt-4 flex flex-col gap-2 text-sm">
           <span className="font-medium text-fg">Message</span>
           <textarea
-            className="min-h-[120px] rounded-2xl border border-border bg-surface px-3 py-2 text-sm text-fg shadow-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-ring"
+            className="min-h-30 rounded-2xl border border-border bg-surface px-3 py-2 text-sm text-fg shadow-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-ring"
             placeholder="Tell us what would make CGPA Mate even better."
+            value={form.message}
+            onChange={(event) =>
+              setForm((prev) => ({ ...prev, message: event.target.value }))
+            }
           />
         </label>
         <div className="mt-4 flex justify-end">

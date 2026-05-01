@@ -16,7 +16,6 @@ const MAX = {
 const markFields = [
   { key: "assignment", label: "Assignment", max: MAX.assignment },
   { key: "presentation", label: "Presentation", max: MAX.presentation },
-  { key: "quiz", label: "Quiz", max: MAX.quiz },
   { key: "mid", label: "Midterm", max: MAX.mid },
   { key: "final", label: "Final", max: MAX.final },
 ];
@@ -41,16 +40,34 @@ function calculateTotals(form) {
       ? attendanceFromPercent(form.attendancePercent)
       : clamp(form.attendanceMarks, 0, MAX.attendance);
 
+  const quizAverage =
+    form.quizMode === "average"
+      ? clamp(form.quizAverage, 0, MAX.quiz)
+      : (() => {
+          const count = clamp(form.quizCount, 3, 4);
+          const scores = form.quizScores
+            .slice(0, count)
+            .map((score) => clamp(score, 0, MAX.quiz));
+          if (scores.length === 4) {
+            const sorted = [...scores].sort((a, b) => b - a).slice(0, 3);
+            const sum = sorted.reduce((total, score) => total + score, 0);
+            return sum / 3;
+          }
+          const sum = scores.reduce((total, score) => total + score, 0);
+          return count > 0 ? sum / count : 0;
+        })();
+
   const total =
     clamp(form.assignment, 0, MAX.assignment) +
     clamp(form.presentation, 0, MAX.presentation) +
     attendance +
-    clamp(form.quiz, 0, MAX.quiz) +
+    quizAverage +
     clamp(form.mid, 0, MAX.mid) +
     clamp(form.final, 0, MAX.final);
 
   return {
     attendance,
+    quizAverage: round1(quizAverage),
     total: round1(total),
   };
 }
@@ -75,6 +92,15 @@ function MarkField({ label, value, max, onChange }) {
           onChange={(event) => onChange(event.target.value)}
         />
       </div>
+      <input
+        className="mt-3 w-full accent-primary"
+        type="range"
+        min={0}
+        max={max}
+        step={0.5}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      />
       <div className="mt-3 h-2 overflow-hidden rounded-full bg-surface">
         <div
           className="h-full rounded-full bg-primary/70 transition-all"
@@ -124,6 +150,17 @@ export default function ResultEstimationTab({
             value={form.credit}
             onChange={(value) => onFormChange("credit", value)}
           />
+        </div>
+        <div className="mt-5 flex flex-wrap items-center gap-3">
+          <StatPill label="Total" value={`${totals.total} / 100`} />
+          <StatPill label="Grade" value={grade.grade} tone="success" />
+          <StatPill label="GPA" value={grade.gpa.toFixed(2)} tone="warning" />
+          {nextTarget ? (
+            <StatPill
+              label="Next Grade"
+              value={`${nextTarget.grade} at ${nextTarget.min}+`}
+            />
+          ) : null}
         </div>
         <div className="mt-5 grid gap-4 md:grid-cols-2">
           {markFields.map((field) => (
@@ -188,17 +225,91 @@ export default function ResultEstimationTab({
               Recorded attendance: {totals.attendance} / {MAX.attendance}
             </div>
           </Card>
-        </div>
-        <div className="mt-6 flex flex-wrap items-center gap-3">
-          <StatPill label="Total" value={`${totals.total} / 100`} />
-          <StatPill label="Grade" value={grade.grade} tone="success" />
-          <StatPill label="GPA" value={grade.gpa.toFixed(2)} tone="warning" />
-          {nextTarget ? (
-            <StatPill
-              label="Next Grade"
-              value={`${nextTarget.grade} at ${nextTarget.min}+`}
-            />
-          ) : null}
+          <Card className="space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-fg">Quiz Average</p>
+              <div className="flex items-center gap-2 rounded-full bg-surface px-2 py-1 text-xs text-muted">
+                <button
+                  className={`rounded-full px-2 py-1 transition ${
+                    form.quizMode === "average"
+                      ? "bg-primary text-white"
+                      : "text-muted"
+                  }`}
+                  onClick={() => onFormChange("quizMode", "average")}
+                  type="button"
+                >
+                  Direct
+                </button>
+                <button
+                  className={`rounded-full px-2 py-1 transition ${
+                    form.quizMode === "breakdown"
+                      ? "bg-primary text-white"
+                      : "text-muted"
+                  }`}
+                  onClick={() => onFormChange("quizMode", "breakdown")}
+                  type="button"
+                >
+                  Quiz 1-3/4
+                </button>
+              </div>
+            </div>
+            {form.quizMode === "average" ? (
+              <Input
+                label="Quiz Average"
+                type="number"
+                min={0}
+                max={MAX.quiz}
+                step={0.5}
+                value={form.quizAverage}
+                onChange={(value) => onFormChange("quizAverage", value)}
+              />
+            ) : (
+              <div className="space-y-3">
+                <label className="flex items-center justify-between text-xs text-muted">
+                  <span>Quiz Count</span>
+                  <div className="flex gap-2">
+                    {[3, 4].map((count) => (
+                      <button
+                        key={count}
+                        className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                          form.quizCount === count
+                            ? "bg-primary text-white"
+                            : "border border-border text-muted"
+                        }`}
+                        onClick={() => onFormChange("quizCount", count)}
+                        type="button"
+                      >
+                        {count}
+                      </button>
+                    ))}
+                  </div>
+                </label>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {form.quizScores
+                    .slice(0, form.quizCount)
+                    .map((score, index) => (
+                      <Input
+                        key={`quiz-${index + 1}`}
+                        label={`Quiz ${index + 1}`}
+                        type="number"
+                        min={0}
+                        max={MAX.quiz}
+                        step={0.5}
+                        value={score}
+                        onChange={(value) => {
+                          const nextScores = [...form.quizScores];
+                          nextScores[index] = Number(value);
+                          onFormChange("quizScores", nextScores);
+                        }}
+                      />
+                    ))}
+                </div>
+              </div>
+            )}
+            <div className="text-xs text-muted">
+              Current quiz average: {totals.quizAverage} / {MAX.quiz}
+            </div>
+          </Card>
         </div>
       </SectionCard>
 
@@ -213,7 +324,7 @@ export default function ResultEstimationTab({
         ) : (
           <div className="-mx-2 flex gap-4 overflow-x-auto px-2 pb-2">
             {subjects.map((subject) => (
-              <Card key={subject.id} className="min-w-[240px] flex-1">
+              <Card key={subject.id} className="min-w-60 flex-1">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <h3 className="text-base font-semibold text-fg">
