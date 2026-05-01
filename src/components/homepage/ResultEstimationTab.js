@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import { gradeFromScore, nextGradeTarget } from "@/lib/cgpa";
-import { Button, Card, Input, SectionCard, StatPill } from "./ui";
+import { gradeFromScore } from "@/lib/cgpa";
+import { Button, Input, SectionCard } from "./ui";
 
 const MAX = {
   assignment: 5,
@@ -12,13 +12,6 @@ const MAX = {
   mid: 25,
   final: 40,
 };
-
-const markFields = [
-  { key: "assignment", label: "Assignment", max: MAX.assignment },
-  { key: "presentation", label: "Presentation", max: MAX.presentation },
-  { key: "mid", label: "Midterm", max: MAX.mid },
-  { key: "final", label: "Final", max: MAX.final },
-];
 
 function clamp(value, min, max) {
   const safe = Number(value);
@@ -30,90 +23,91 @@ function round1(value) {
   return Math.round(value * 10) / 10;
 }
 
+function round2(value) {
+  return Math.round(value * 100) / 100;
+}
+
 function attendanceFromPercent(percent) {
   return round1((clamp(percent, 0, 100) / 100) * MAX.attendance);
 }
 
+// Compute quiz average (Best 3 of 4 or Avg of 3)
+function computeQuizAvg(scores, count) {
+  const n = clamp(count, 3, 4);
+  const vals = scores.slice(0, n).map((s) => clamp(s, 0, MAX.quiz));
+
+  if (n === 4) {
+    // Best 3 of 4
+    const sorted = [...vals].sort((a, b) => b - a).slice(0, 3);
+    return sorted.reduce((t, s) => t + s, 0) / 3;
+  }
+  // Average of 3
+  return vals.length > 0 ? vals.reduce((t, s) => t + s, 0) / vals.length : 0;
+}
+
+// Core calculation
 function calculateTotals(form) {
   const attendance =
     form.attendanceMode === "percent"
       ? attendanceFromPercent(form.attendancePercent)
       : clamp(form.attendanceMarks, 0, MAX.attendance);
 
-  const quizAverage =
-    form.quizMode === "average"
-      ? clamp(form.quizAverage, 0, MAX.quiz)
-      : (() => {
-          const count = clamp(form.quizCount, 3, 4);
-          const scores = form.quizScores
-            .slice(0, count)
-            .map((score) => clamp(score, 0, MAX.quiz));
-          if (!form.quizConfirmed) return 0;
-          if (scores.length === 4) {
-            const sorted = [...scores].sort((a, b) => b - a).slice(0, 3);
-            const sum = sorted.reduce((total, score) => total + score, 0);
-            return sum / 3;
-          }
-          const sum = scores.reduce((total, score) => total + score, 0);
-          return count > 0 ? sum / count : 0;
-        })();
+  let quizValue = 0;
+  if (form.quizMode === "average") {
+    quizValue = clamp(Number(form.quizAverage), 0, MAX.quiz);
+  } else if (form.quizMode === "breakdown" && form.quizConfirmed) {
+    quizValue = computeQuizAvg(form.quizScores, form.quizCount);
+  }
 
   const total =
-    clamp(form.assignment, 0, MAX.assignment) +
-    clamp(form.presentation, 0, MAX.presentation) +
+    clamp(Number(form.assignment), 0, MAX.assignment) +
+    clamp(Number(form.presentation), 0, MAX.presentation) +
     attendance +
-    quizAverage +
-    clamp(form.mid, 0, MAX.mid) +
-    clamp(form.final, 0, MAX.final);
+    quizValue +
+    clamp(Number(form.mid), 0, MAX.mid) +
+    clamp(Number(form.final), 0, MAX.final);
 
   return {
-    attendance,
-    quizAverage: round1(quizAverage),
+    attendance: round1(attendance),
+    quizValue: round2(quizValue),
     total: round1(total),
   };
 }
 
-function MarkField({ label, value, max, onChange }) {
-  const percent = Math.min(100, (Number(value) / max) * 100 || 0);
+const GRADE_THRESHOLDS = [
+  { grade: "A+", min: 90 },
+  { grade: "A", min: 85 },
+  { grade: "A-", min: 80 },
+  { grade: "B+", min: 75 },
+  { grade: "B", min: 70 },
+  { grade: "B-", min: 65 },
+  { grade: "C+", min: 60 },
+  { grade: "C", min: 55 },
+  { grade: "D", min: 50 },
+  { grade: "F", min: 0 },
+];
 
+function MarkField({ label, value, max, onChange }) {
   return (
-    <div className="rounded-2xl border border-border/60 bg-surface-2/70 p-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-fg">{label}</p>
-          <p className="text-xs text-muted">Out of {max}</p>
-        </div>
+    <div className="rounded-2xl border border-border/60 bg-surface-2/70 p-3">
+      <div className="mb-2 flex items-center justify-between text-xs text-muted">
+        <span>{label}</span>
+        <span className="text-sm font-semibold text-fg">
+          {Number(value || 0).toFixed(1)}{" "}
+          <span className="text-[10px] font-normal text-muted">/ {max}</span>
+        </span>
       </div>
       <input
-        className="mt-3 w-full accent-primary"
+        className="w-full accent-primary"
         type="range"
         min={0}
         max={max}
         step={0.5}
         value={value}
-        onChange={(event) => onChange(event.target.value)}
+        onChange={(e) => onChange(e.target.value)}
       />
-      <div className="mt-3 h-2 overflow-hidden rounded-full bg-surface">
-        <div
-          className="h-full rounded-full bg-primary/70 transition-all"
-          style={{ width: `${percent}%` }}
-        />
-      </div>
     </div>
   );
-}
-
-function computeQuizAverage(scores, count) {
-  const selected = scores
-    .slice(0, count)
-    .map((score) => clamp(score, 0, MAX.quiz));
-  if (selected.length === 4) {
-    const sorted = [...selected].sort((a, b) => b - a).slice(0, 3);
-    const sum = sorted.reduce((total, score) => total + score, 0);
-    return sum / 3;
-  }
-  const sum = selected.reduce((total, score) => total + score, 0);
-  return count > 0 ? sum / count : 0;
 }
 
 export default function ResultEstimationTab({
@@ -126,185 +120,206 @@ export default function ResultEstimationTab({
 }) {
   const totals = useMemo(() => calculateTotals(form), [form]);
   const grade = gradeFromScore(totals.total);
-  const nextTarget = nextGradeTarget(totals.total);
+
+  const liveQuizAvg = useMemo(
+    () => round2(computeQuizAvg(form.quizScores, form.quizCount)),
+    [form.quizScores, form.quizCount]
+  );
+
+  const nextGrade = useMemo(() => {
+    const idx = GRADE_THRESHOLDS.findIndex((g) => g.grade === grade.grade);
+    if (idx <= 0) return null;
+    const next = GRADE_THRESHOLDS[idx - 1];
+    const needed = round1(next.min - totals.total);
+    return needed > 0 ? { grade: next.grade, marksNeeded: needed } : null;
+  }, [grade.grade, totals.total]);
+
+  const liveAttendanceMark = attendanceFromPercent(form.attendancePercent);
+
   const hasNegative = [
     form.credit,
     form.attendancePercent,
     form.attendanceMarks,
     form.quizAverage,
     ...form.quizScores,
-  ].some((value) => Number(value) < 0);
+  ].some((v) => Number(v) < 0);
+
+  // ── Top Summary Pill ──
+  const summaryBlock = (
+    <div className="rounded-xl border border-border bg-surface-2 px-4 py-2 shadow-sm">
+      <div className="flex items-center gap-4">
+        <div className="text-center">
+          <p className="text-[10px] uppercase tracking-wider text-muted">Total Marks</p>
+          <p className="mt-0.5 text-lg font-bold leading-none text-fg">{totals.total}</p>
+        </div>
+        <div className="h-6 w-px bg-border/60" />
+        <div className="text-center">
+          <p className="text-[10px] uppercase tracking-wider text-muted">Grade</p>
+          <p className="mt-0.5 text-lg font-bold leading-none text-primary">{grade.grade}</p>
+        </div>
+      </div>
+      {nextGrade && (
+        <p className="mt-1.5 text-center text-xs text-muted">
+          Next: <span className="font-semibold text-amber-500">{nextGrade.grade}</span>{" "}
+          <span className="text-[10px]">(+{nextGrade.marksNeeded})</span>
+        </p>
+      )}
+    </div>
+  );
 
   return (
     <div className="space-y-6">
-      <SectionCard title="Result Estimation" subtitle="Enter marks to preview total, grade, and GPA before adding subjects.">
-        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-          <Button onClick={onAddSubject} className="w-full md:w-auto">
-            Add Subject
-          </Button>
-          <div className="sticky top-28 z-10 rounded-2xl border border-border bg-slate-900/95 px-4 py-3 text-white shadow-lg backdrop-blur md:static md:w-[260px] md:bg-surface md:text-fg md:shadow-sm">
-            <p className="text-[11px] uppercase tracking-[0.25em] text-white/70 md:text-muted">
-              Current Result
-            </p>
-            <div className="mt-2 flex items-center justify-between">
-              <div>
-                <p className="text-2xl font-semibold text-white md:text-fg">
-                  {totals.total}
-                </p>
-                <p className="text-[11px] text-white/60 md:text-muted">
-                  Total Marks
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-xl font-semibold text-white md:text-fg">
-                  {grade.grade}
-                </p>
-                <p className="text-[11px] text-white/60 md:text-muted">Grade</p>
+      <SectionCard
+        title="Result Estimation"
+        subtitle="Enter marks to preview total and grade before adding."
+        action={summaryBlock}
+      >
+        {/* Subject Name + Credit */}
+        <div className="mb-5 flex items-end gap-3">
+          <div className="min-w-0 flex-1">
+            <Input
+              label="Subject Name"
+              value={form.name}
+              onChange={(v) => onFormChange("name", v)}
+              placeholder="e.g. Data Structures"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-muted">Credit</label>
+            <div className="flex h-11 w-36 items-center justify-between rounded-xl border border-border bg-surface-2/70 px-2">
+              <span className="w-8 select-none text-center text-sm font-semibold text-fg tabular-nums">
+                {Number(form.credit || 0).toFixed(1)}
+              </span>
+              <div className="h-4 w-px bg-border/60" />
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => onFormChange("credit", Math.max(0, round1(Number(form.credit || 0) - 0.5)))}
+                  className="flex h-7 w-7 items-center justify-center rounded-md border border-primary/40 bg-primary/10 text-sm font-bold text-primary hover:bg-primary hover:text-white active:scale-95 transition"
+                >
+                  −
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onFormChange("credit", Math.min(6, round1(Number(form.credit || 0) + 0.5)))}
+                  className="flex h-7 w-7 items-center justify-center rounded-md border border-primary/40 bg-primary/10 text-sm font-bold text-primary hover:bg-primary hover:text-white active:scale-95 transition"
+                >
+                  +
+                </button>
               </div>
             </div>
-            {nextTarget ? (
-              <p className="mt-2 text-[11px] text-white/60 md:text-muted">
-                Next {nextTarget.grade} at {nextTarget.min}+
-              </p>
-            ) : null}
           </div>
         </div>
-        <div className="grid gap-4 md:grid-cols-2">
-          <Input
-            label="Subject Name"
-            value={form.name}
-            onChange={(value) => onFormChange("name", value)}
-            placeholder="e.g. Data Structures"
-          />
-          <Input
-            label="Credit"
-            type="number"
-            min={1}
-            max={6}
-            step={0.5}
-            value={form.credit}
-            onChange={(value) => onFormChange("credit", value)}
-          />
-        </div>
-        <div className="mt-5 grid gap-4 md:grid-cols-2">
-          {markFields.map((field) => (
-            <MarkField
-              key={field.key}
-              label={field.label}
-              max={field.max}
-              value={form[field.key]}
-              onChange={(value) => onFormChange(field.key, value)}
-            />
-          ))}
-          <Card className="space-y-3">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-fg">Attendance</p>
-              <div className="flex items-center gap-2 rounded-full bg-surface px-2 py-1 text-xs text-muted">
-                <button
-                  className={`rounded-full px-2 py-1 transition ${
-                    form.attendanceMode === "percent"
-                      ? "bg-primary text-white"
-                      : "text-muted"
-                  }`}
-                  onClick={() => onFormChange("attendanceMode", "percent")}
-                  type="button"
-                >
-                  %
-                </button>
-                <button
-                  className={`rounded-full px-2 py-1 transition ${
-                    form.attendanceMode === "manual"
-                      ? "bg-primary text-white"
-                      : "text-muted"
-                  }`}
-                  onClick={() => onFormChange("attendanceMode", "manual")}
-                  type="button"
-                >
-                  Marks
-                </button>
+
+        <div className="space-y-3">
+          {/* Assignment, Presentation, Attendance */}
+          <div className="grid gap-3 sm:grid-cols-3">
+            <MarkField label="Assignment" max={MAX.assignment} value={form.assignment} onChange={(v) => onFormChange("assignment", v)} />
+            <MarkField label="Presentation" max={MAX.presentation} value={form.presentation} onChange={(v) => onFormChange("presentation", v)} />
+
+            {/* Attendance */}
+            <div className="rounded-2xl border border-border/60 bg-surface-2/70 p-3">
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-xs text-muted">Attendance</span>
+                <div className="flex items-center gap-2">
+                  {form.attendanceMode === "percent" && (
+                    <span className="text-xs font-semibold text-fg tabular-nums">
+                      {liveAttendanceMark}
+                      <span className="ml-0.5 text-[10px] font-normal text-muted">/ {MAX.attendance}</span>
+                    </span>
+                  )}
+                  <div className="flex shrink-0 items-center rounded-md bg-surface p-0.5 text-[10px]">
+                    <button
+                      className={`rounded px-1.5 py-0.5 transition ${form.attendanceMode === "percent" ? "bg-primary text-white" : "text-muted"}`}
+                      onClick={() => onFormChange("attendanceMode", "percent")}
+                      type="button"
+                    >
+                      %
+                    </button>
+                    <button
+                      className={`rounded px-1.5 py-0.5 transition ${form.attendanceMode === "manual" ? "bg-primary text-white" : "text-muted"}`}
+                      onClick={() => onFormChange("attendanceMode", "manual")}
+                      type="button"
+                    >
+                      Marks
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-            {form.attendanceMode === "percent" ? (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs text-muted">
-                  <span>Attendance %</span>
-                  <span className="text-sm font-semibold text-fg">
-                    {Number(form.attendancePercent || 0).toFixed(0)}%
+
+              {form.attendanceMode === "percent" ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    className="w-full accent-primary"
+                    type="range"
+                    min={0}
+                    max={100}
+                    step={1}
+                    value={form.attendancePercent}
+                    onChange={(e) => onFormChange("attendancePercent", e.target.value)}
+                  />
+                  <span className="w-9 shrink-0 text-right text-sm font-semibold text-fg tabular-nums">
+                    {Number(form.attendancePercent || 0)}%
                   </span>
                 </div>
-                <input
-                  className="w-full accent-primary"
-                  type="range"
-                  min={0}
-                  max={100}
-                  step={1}
-                  value={form.attendancePercent}
-                  onChange={(event) =>
-                    onFormChange("attendancePercent", event.target.value)
-                  }
-                />
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs text-muted">
-                  <span>Attendance Marks</span>
-                  <span className="text-sm font-semibold text-fg">
+              ) : (
+                <div className="flex items-center gap-2">
+                  <input
+                    className="w-full accent-primary"
+                    type="range"
+                    min={0}
+                    max={MAX.attendance}
+                    step={0.5}
+                    value={form.attendanceMarks}
+                    onChange={(e) => onFormChange("attendanceMarks", e.target.value)}
+                  />
+                  <span className="w-9 shrink-0 text-right text-sm font-semibold text-fg tabular-nums">
                     {Number(form.attendanceMarks || 0).toFixed(1)}
                   </span>
                 </div>
-                <input
-                  className="w-full accent-primary"
-                  type="range"
-                  min={0}
-                  max={MAX.attendance}
-                  step={0.5}
-                  value={form.attendanceMarks}
-                  onChange={(event) =>
-                    onFormChange("attendanceMarks", event.target.value)
-                  }
-                />
-              </div>
-            )}
-            <div className="text-xs text-muted">
-              Recorded attendance: {totals.attendance} / {MAX.attendance}
+              )}
             </div>
-          </Card>
-          <Card className="space-y-3">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-fg">Quiz Average</p>
-              <div className="flex items-center gap-2 rounded-full bg-surface px-2 py-1 text-xs text-muted">
+          </div>
+
+          {/* Mid + Final */}
+          <div className="grid gap-3 sm:grid-cols-2">
+            <MarkField label="Midterm" max={MAX.mid} value={form.mid} onChange={(v) => onFormChange("mid", v)} />
+            <MarkField label="Final" max={MAX.final} value={form.final} onChange={(v) => onFormChange("final", v)} />
+          </div>
+
+          {/* Quiz Section - Improved */}
+          <div className="rounded-2xl border border-border/60 bg-surface-2/70 p-3">
+            <div className="mb-3 flex items-center justify-between">
+              <span className="text-xs text-muted">
+                Quiz <span className="text-[10px] text-muted/70">({form.quizCount === 4 ? "Best 3 of 4" : "Average of 3"})</span>
+              </span>
+              <div className="flex items-center gap-1 rounded-md bg-surface p-0.5 text-[10px]">
                 <button
-                  className={`rounded-full px-2 py-1 transition ${
-                    form.quizMode === "average"
-                      ? "bg-primary text-white"
-                      : "text-muted"
-                  }`}
-                  onClick={() => onFormChange("quizMode", "average")}
+                  className={`rounded px-2.5 py-0.5 transition ${form.quizMode === "average" ? "bg-primary text-white" : "text-muted"}`}
+                  onClick={() => {
+                    onFormChange("quizMode", "average");
+                    onFormChange("quizConfirmed", false);
+                  }}
                   type="button"
                 >
                   Direct
                 </button>
                 <button
-                  className={`rounded-full px-2 py-1 transition ${
-                    form.quizMode === "breakdown"
-                      ? "bg-primary text-white"
-                      : "text-muted"
-                  }`}
-                  onClick={() => onFormChange("quizMode", "breakdown")}
+                  className={`rounded px-2.5 py-0.5 transition ${form.quizMode === "breakdown" ? "bg-primary text-white" : "text-muted"}`}
+                  onClick={() => {
+                    onFormChange("quizMode", "breakdown");
+                    onFormChange("quizConfirmed", false);
+                  }}
                   type="button"
                 >
-                  Quiz 1-3/4
+                  Breakdown
                 </button>
               </div>
             </div>
-            {form.quizMode === "average" ? (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs text-muted">
-                  <span>Quiz Average</span>
-                  <span className="text-sm font-semibold text-fg">
-                    {Number(form.quizAverage || 0).toFixed(1)}
-                  </span>
-                </div>
+
+            {form.quizMode === "average" && (
+              <div className="flex items-center gap-2">
                 <input
                   className="w-full accent-primary"
                   type="range"
@@ -312,179 +327,182 @@ export default function ResultEstimationTab({
                   max={MAX.quiz}
                   step={0.5}
                   value={form.quizAverage}
-                  onChange={(event) =>
-                    onFormChange("quizAverage", event.target.value)
-                  }
+                  onChange={(e) => onFormChange("quizAverage", e.target.value)}
                 />
-              </div>
-            ) : form.quizConfirmed ? (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between text-xs text-muted">
-                  <span>Confirmed Average</span>
-                  <span className="text-sm font-semibold text-fg">
-                    {Number(form.quizAverage || 0).toFixed(2)}
-                  </span>
-                </div>
-                <button
-                  className="rounded-full border border-border px-4 py-2 text-xs font-semibold text-muted transition hover:border-primary hover:text-primary"
-                  type="button"
-                  onClick={() => onFormChange("quizConfirmed", false)}
-                >
-                  Recalculate
-                </button>
-                <p className="text-xs text-muted">
-                  {form.quizCount === 4
-                    ? "Average counts the best 3 quizzes."
-                    : "Average is calculated from the provided quizzes."}
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <label className="flex items-center justify-between text-xs text-muted">
-                  <span>Quiz Count</span>
-                  <div className="flex gap-2">
-                    {[3, 4].map((count) => (
-                      <button
-                        key={count}
-                        className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-                          form.quizCount === count
-                            ? "bg-primary text-white"
-                            : "border border-border text-muted"
-                        }`}
-                        onClick={() => onFormChange("quizCount", count)}
-                        type="button"
-                      >
-                        {count}
-                      </button>
-                    ))}
-                  </div>
-                </label>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {form.quizScores
-                    .slice(0, form.quizCount)
-                    .map((score, index) => (
-                      <div
-                        key={`quiz-${index + 1}`}
-                        className="rounded-2xl border border-border/60 bg-surface-2/70 p-3"
-                      >
-                        <div className="flex items-center justify-between text-xs text-muted">
-                          <span>{`Quiz ${index + 1}`}</span>
-                          <span className="text-sm font-semibold text-fg">
-                            {Number(score || 0).toFixed(1)}
-                          </span>
-                        </div>
-                        <input
-                          className="mt-3 w-full accent-primary"
-                          type="range"
-                          min={0}
-                          max={MAX.quiz}
-                          step={0.5}
-                          value={score}
-                          onChange={(event) => {
-                            const nextScores = [...form.quizScores];
-                            nextScores[index] = Number(event.target.value);
-                            onFormChange("quizScores", nextScores);
-                          }}
-                        />
-                      </div>
-                    ))}
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    className="rounded-full bg-primary px-4 py-2 text-xs font-semibold text-white transition hover:bg-primary/90"
-                    type="button"
-                    onClick={() => {
-                      const average = computeQuizAverage(
-                        form.quizScores,
-                        form.quizCount
-                      );
-                      onFormChange("quizAverage", Number(average.toFixed(2)));
-                      onFormChange("quizConfirmed", true);
-                    }}
-                  >
-                    OK
-                  </button>
-                </div>
-                <p className="text-xs text-muted">
-                  {form.quizCount === 4
-                    ? "Average will count the best 3 quizzes."
-                    : "Average is calculated from the provided quizzes."}
-                </p>
+                <span className="w-10 text-right text-sm font-semibold text-fg tabular-nums">
+                  {Number(form.quizAverage || 0).toFixed(1)}
+                </span>
               </div>
             )}
-            <div className="text-xs text-muted">
-              {form.quizMode === "breakdown" && !form.quizConfirmed
-                ? "Press OK to confirm quiz average."
-                : `Current quiz average: ${totals.quizAverage} / ${MAX.quiz}`}
-            </div>
-          </Card>
+
+            {form.quizMode === "breakdown" && (
+              <>
+                {form.quizConfirmed ? (
+                  <div className="flex items-center justify-between rounded-lg border border-border/40 bg-surface/50 px-4 py-3">
+                    <div>
+                      <span className="text-[10px] text-muted">Quiz Average</span>
+                      <div className="text-lg font-bold text-fg">
+                        {round2(computeQuizAvg(form.quizScores, form.quizCount)).toFixed(2)}
+                        <span className="text-xs font-normal text-muted ml-1">/ {MAX.quiz}</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => onFormChange("quizConfirmed", false)}
+                      className="rounded-md border border-border bg-surface px-4 py-1.5 text-xs font-semibold hover:border-primary hover:text-primary transition"
+                      type="button"
+                    >
+                      Recalculate
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] text-muted">Number of Quizzes:</span>
+                      {[3, 4].map((c) => (
+                        <button
+                          key={c}
+                          onClick={() => onFormChange("quizCount", c)}
+                          className={`rounded px-3 py-1 text-xs font-semibold transition ${
+                            form.quizCount === c
+                              ? "bg-primary text-white"
+                              : "border border-border bg-surface text-muted hover:bg-surface-2"
+                          }`}
+                          type="button"
+                        >
+                          {c}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="grid gap-3 sm:grid-cols-4">
+                      {form.quizScores.slice(0, form.quizCount).map((score, i) => (
+                        <div key={i} className="flex flex-col gap-1">
+                          <div className="flex justify-between text-[10px] text-muted">
+                            <span>Q{i + 1}</span>
+                            <span className="font-semibold text-fg">{Number(score || 0).toFixed(1)}</span>
+                          </div>
+                          <input
+                            className="w-full accent-primary"
+                            type="range"
+                            min={0}
+                            max={MAX.quiz}
+                            step={0.5}
+                            value={score}
+                            onChange={(e) => {
+                              const next = [...form.quizScores];
+                              next[i] = Number(e.target.value);
+                              onFormChange("quizScores", next);
+                            }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2">
+                      <div className="text-sm">
+                        Preview:{" "}
+                        <span className="font-bold text-fg">{liveQuizAvg.toFixed(2)}</span>
+                        <span className="text-xs text-muted"> / {MAX.quiz}</span>
+                      </div>
+                      <button
+                        onClick={() => onFormChange("quizConfirmed", true)}
+                        className="rounded-lg bg-primary px-8 py-2 text-sm font-semibold text-white hover:bg-primary/90 active:scale-[0.98] transition"
+                        type="button"
+                      >
+                        OK
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </div>
-        {hasNegative ? (
-          <p className="mt-4 text-sm font-semibold text-rose-600">
-            Please enter values greater than or equal to 0.
+
+        {/* Bottom Total Bar */}
+        <div className="mt-6 flex flex-wrap items-center gap-6 rounded-2xl border border-border/60 bg-surface-2/50 px-5 py-4">
+          <div>
+            <p className="text-[10px] uppercase tracking-wider text-muted">TOTAL</p>
+            <p className="text-2xl font-bold text-fg">{totals.total}</p>
+          </div>
+          <div className="h-8 w-px bg-border/60" />
+          <div>
+            <p className="text-[10px] uppercase tracking-wider text-muted">GRADE</p>
+            <p className="text-2xl font-bold text-primary">{grade.grade}</p>
+          </div>
+          {nextGrade && (
+            <>
+              <div className="h-8 w-px bg-border/60" />
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-muted">NEXT</p>
+                <p className="text-xl font-bold text-amber-500">{nextGrade.grade}</p>
+              </div>
+              <div className="ml-auto text-right">
+                <p className="text-xs text-muted">Marks needed</p>
+                <p className="text-lg font-semibold text-amber-500">+{nextGrade.marksNeeded}</p>
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="mt-5 flex justify-end">
+          <Button onClick={onAddSubject} className="w-full sm:w-auto">
+            Add Subject to Result
+          </Button>
+        </div>
+
+        {hasNegative && (
+          <p className="mt-3 text-sm font-semibold text-rose-600">
+            All marks must be greater than or equal to 0.
           </p>
-        ) : null}
+        )}
       </SectionCard>
 
-      <SectionCard
-        title="Subjects"
-        subtitle="Subjects stay in a single row on mobile. Add them to the semester when ready."
-      >
-        {subjects.length === 0 ? (
-          <p className="text-sm text-muted">
-            No subjects added yet. Your saved subjects will appear here.
-          </p>
-        ) : (
-          <div className="-mx-2 flex gap-4 overflow-x-auto px-2 pb-2">
-            {subjects.map((subject) => (
-              <Card key={subject.id} className="min-w-60 flex-1">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h3 className="text-base font-semibold text-fg">
-                      {subject.name}
-                    </h3>
-                    <p className="text-xs text-muted">
-                      Credit {subject.credit}
-                    </p>
-                  </div>
+      {/* Improved Added Subjects Section */}
+      <SectionCard title="Added Subjects">
+        <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
+          <div className="grid grid-cols-12 bg-surface-2 px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-muted border-b border-border">
+            <div className="col-span-5">Subject Name</div>
+            <div className="col-span-2 text-center">Credit</div>
+            <div className="col-span-2 text-center">Total Marks</div>
+            <div className="col-span-1 text-center">Grade</div>
+            <div className="col-span-2 text-right">Actions</div>
+          </div>
+
+          {subjects.length === 0 ? (
+            <div className="p-12 text-center">
+              <p className="text-sm text-muted">No subjects added yet.</p>
+              <p className="text-xs text-muted/70 mt-1">Add subjects from the estimation form above.</p>
+            </div>
+          ) : (
+            subjects.map((sub) => (
+              <div
+                key={sub.id}
+                className="grid grid-cols-12 items-center px-5 py-4 border-b border-border/50 last:border-0 hover:bg-primary/5 transition-all duration-200"
+              >
+                <div className="col-span-5 font-medium text-sm truncate pr-2">{sub.name || "Untitled Subject"}</div>
+                <div className="col-span-2 text-center text-sm tabular-nums font-medium">{sub.credit}</div>
+                <div className="col-span-2 text-center text-sm font-bold tabular-nums">{sub.total}</div>
+                <div className="col-span-1 text-center font-black text-lg text-primary">{sub.grade}</div>
+                <div className="col-span-2 flex justify-end gap-4">
                   <button
-                    className="rounded-full border border-border px-3 py-1 text-xs font-semibold text-muted transition hover:border-primary hover:text-primary"
-                    onClick={() => onRemoveSubject(subject.id)}
+                    onClick={() => onAddToSemester(sub.id)}
+                    className="text-xs font-bold text-primary hover:underline transition"
                   >
-                    Remove
+                    + SEM
+                  </button>
+                  <button
+                    onClick={() => onRemoveSubject(sub.id)}
+                    className="text-rose-500 hover:text-rose-600 transition hover:scale-110"
+                    title="Remove subject"
+                  >
+                    ✕
                   </button>
                 </div>
-                <div className="mt-4 flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-muted">Total</p>
-                    <p className="text-lg font-semibold text-fg">
-                      {subject.total}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted">Grade</p>
-                    <p className="text-lg font-semibold text-fg">
-                      {subject.grade}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted">GPA</p>
-                    <p className="text-lg font-semibold text-fg">
-                      {subject.gpa.toFixed(2)}
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  className="mt-4 w-full"
-                  variant="outline"
-                  onClick={() => onAddToSemester(subject.id)}
-                >
-                  Add to Semester
-                </Button>
-              </Card>
-            ))}
-          </div>
-        )}
+              </div>
+            ))
+          )}
+        </div>
       </SectionCard>
     </div>
   );
