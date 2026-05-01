@@ -132,7 +132,7 @@ export default function ResultEstimationTab({
 
   // ── Top Summary Pill ──
   const summaryBlock = (
-    <div className="rounded-xl border border-border bg-surface-2 px-4 py-2 shadow-sm">
+    <div className="rounded-xl hidden md:block border border-border bg-surface-2 px-4 py-2 shadow-sm">
       <div className="flex items-center gap-4">
         <div className="text-center">
           <p className="text-[10px] uppercase tracking-wider text-muted">Total Marks</p>
