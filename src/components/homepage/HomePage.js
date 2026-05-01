@@ -30,6 +30,7 @@ const initialEstimationForm = {
   quizAverage: 0,
   quizScores: [0, 0, 0, 0],
   quizCount: 3,
+  quizConfirmed: false,
   mid: 0,
   final: 0,
 };
@@ -79,6 +80,7 @@ function calculateEstimationTotal(form) {
           const scores = form.quizScores
             .slice(0, count)
             .map((score) => clamp(toNumber(score), 0, MAX_MARKS.quiz));
+          if (!form.quizConfirmed) return 0;
           if (scores.length === 4) {
             const sorted = [...scores].sort((a, b) => b - a).slice(0, 3);
             const sum = sorted.reduce((total, score) => total + score, 0);
@@ -161,6 +163,10 @@ export default function HomePage() {
           : key === "quizCount"
           ? clamp(toNumber(value, current[key]), 3, 4)
           : toNumber(value, current[key]),
+      quizConfirmed:
+        key === "quizScores" || key === "quizCount" || key === "quizMode"
+          ? false
+          : current.quizConfirmed,
     }));
   };
 
@@ -181,6 +187,23 @@ export default function HomePage() {
   const addEstimationSubject = () => {
     if (!estimationForm.name.trim()) {
       addToast("Please add a subject name.", "warning");
+      return;
+    }
+
+    const hasNegative = [
+      estimationForm.credit,
+      estimationForm.assignment,
+      estimationForm.presentation,
+      estimationForm.mid,
+      estimationForm.final,
+      estimationForm.attendancePercent,
+      estimationForm.attendanceMarks,
+      estimationForm.quizAverage,
+      ...estimationForm.quizScores,
+    ].some((value) => Number(value) < 0);
+
+    if (hasNegative) {
+      addToast("Please enter values greater than or equal to 0.", "warning");
       return;
     }
 
