@@ -69,7 +69,7 @@ export function Input({
     <label className={`flex flex-col gap-2 text-sm ${className}`}>
       <span className="font-medium text-fg">{label}</span>
       <input
-        className="h-11 rounded-xl border border-border bg-surface px-3 text-sm text-fg shadow-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-ring"
+        className="h-11 rounded-xl border border-border bg-surface px-3 text-sm text-fg outline-none transition focus:border-primary focus:ring-2 focus:ring-ring"
         type={type}
         value={value}
         onChange={(event) => onChange(event.target.value)}

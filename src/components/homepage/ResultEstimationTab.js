@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { gradeFromScore } from "@/lib/cgpa";
+import { gradeFromScore, nextGradeTarget } from "@/lib/cgpa";
 import { Button, Input, SectionCard } from "./ui";
 
 const MAX = {
@@ -55,7 +55,7 @@ function calculateTotals(form) {
   let quizValue = 0;
   if (form.quizMode === "average") {
     quizValue = clamp(Number(form.quizAverage), 0, MAX.quiz);
-  } else if (form.quizMode === "breakdown" && form.quizConfirmed) {
+  } else if (form.quizMode === "breakdown") {
     quizValue = computeQuizAvg(form.quizScores, form.quizCount);
   }
 
@@ -73,19 +73,6 @@ function calculateTotals(form) {
     total: round1(total),
   };
 }
-
-const GRADE_THRESHOLDS = [
-  { grade: "A+", min: 90 },
-  { grade: "A", min: 85 },
-  { grade: "A-", min: 80 },
-  { grade: "B+", min: 75 },
-  { grade: "B", min: 70 },
-  { grade: "B-", min: 65 },
-  { grade: "C+", min: 60 },
-  { grade: "C", min: 55 },
-  { grade: "D", min: 50 },
-  { grade: "F", min: 0 },
-];
 
 function MarkField({ label, value, max, onChange }) {
   return (
@@ -127,12 +114,11 @@ export default function ResultEstimationTab({
   );
 
   const nextGrade = useMemo(() => {
-    const idx = GRADE_THRESHOLDS.findIndex((g) => g.grade === grade.grade);
-    if (idx <= 0) return null;
-    const next = GRADE_THRESHOLDS[idx - 1];
+    const next = nextGradeTarget(totals.total);
+    if (!next) return null;
     const needed = round1(next.min - totals.total);
     return needed > 0 ? { grade: next.grade, marksNeeded: needed } : null;
-  }, [grade.grade, totals.total]);
+  }, [totals.total]);
 
   const liveAttendanceMark = attendanceFromPercent(form.attendancePercent);
 
@@ -155,12 +141,14 @@ export default function ResultEstimationTab({
         <div className="h-6 w-px bg-border/60" />
         <div className="text-center">
           <p className="text-[10px] uppercase tracking-wider text-muted">Grade</p>
-          <p className="mt-0.5 text-lg font-bold leading-none text-primary">{grade.grade}</p>
+          <p className="mt-0.5 text-lg font-bold leading-none text-primary">
+            {grade.grade} ({grade.gpa.toFixed(2)})
+          </p>
         </div>
       </div>
       {nextGrade && (
         <p className="mt-1.5 text-center text-xs text-muted">
-          Next: <span className="font-semibold text-amber-500">{nextGrade.grade}</span>{" "}
+          Next Grade: <span className="font-semibold text-amber-500">{nextGrade.grade}</span>{" "}
           <span className="text-[10px]">(+{nextGrade.marksNeeded})</span>
         </p>
       )}
@@ -176,7 +164,7 @@ export default function ResultEstimationTab({
       >
         {/* Subject Name + Credit */}
         <div className="mb-5 flex items-end gap-3">
-          <div className="min-w-0 flex-1">
+          <div className="max-w-2/3 flex-1">
             <Input
               label="Subject Name"
               value={form.name}
@@ -185,9 +173,9 @@ export default function ResultEstimationTab({
             />
           </div>
 
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col min-w-1/3 gap-1">
             <label className="text-sm font-medium text-muted">Credit</label>
-            <div className="flex h-11 w-36 items-center justify-between rounded-xl border border-border bg-surface-2/70 px-2">
+            <div className="flex h-11 w-full items-center justify-between rounded-xl border border-border bg-surface-2/70 px-2">
               <span className="w-8 select-none text-center text-sm font-semibold text-fg tabular-nums">
                 {Number(form.credit || 0).toFixed(1)}
               </span>
@@ -428,7 +416,9 @@ export default function ResultEstimationTab({
           <div className="h-8 w-px bg-border/60" />
           <div>
             <p className="text-[10px] uppercase tracking-wider text-muted">GRADE</p>
-            <p className="text-2xl font-bold text-primary">{grade.grade}</p>
+            <p className="text-2xl font-bold text-primary">
+              {grade.grade} ({grade.gpa.toFixed(2)})
+            </p>
           </div>
           {nextGrade && (
             <>
