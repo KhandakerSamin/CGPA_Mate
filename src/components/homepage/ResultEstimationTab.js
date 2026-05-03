@@ -155,6 +155,17 @@ export default function ResultEstimationTab({
     </div>
   );
 
+  // ── Add All to Semester Button ──
+  const addAllBlock = subjects.length > 0 && (
+    <button
+      type="button"
+      onClick={() => subjects.forEach((sub) => onAddToSemester(sub.id))}
+      className="rounded-lg border border-primary/40 bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary hover:bg-primary hover:text-white active:scale-95 transition"
+    >
+      + Add All to Semester
+    </button>
+  );
+
   return (
     <div className="space-y-6">
       <SectionCard
@@ -276,7 +287,7 @@ export default function ResultEstimationTab({
             <MarkField label="Final" max={MAX.final} value={form.final} onChange={(v) => onFormChange("final", v)} />
           </div>
 
-          {/* Quiz Section - Improved */}
+          {/* Quiz Section */}
           <div className="rounded-2xl border border-border/60 bg-surface-2/70 p-3">
             <div className="mb-3 flex items-center justify-between">
               <span className="text-xs text-muted">
@@ -448,8 +459,8 @@ export default function ResultEstimationTab({
         )}
       </SectionCard>
 
-      {/* Improved Added Subjects Section */}
-      <SectionCard title="Added Subjects">
+      {/* Added Subjects Section */}
+      <SectionCard title="Added Subjects" action={addAllBlock}>
         <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
           <div className="grid grid-cols-12 bg-surface-2 px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-muted border-b border-border">
             <div className="col-span-5">Subject Name</div>

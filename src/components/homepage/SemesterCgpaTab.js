@@ -8,6 +8,16 @@ function round1(value) {
   return Math.round(value * 10) / 10;
 }
 
+function getRemark(cgpa) {
+  if (cgpa >= 3.8) return "Excellent";
+  if (cgpa >= 3.5) return "Very Good";
+  if (cgpa >= 3.0) return "Good";
+  if (cgpa >= 2.5) return "Satisfactory";
+  if (cgpa >= 2.0) return "Pass";
+  if (cgpa > 0) return "Needs Improvement";
+  return "No Data";
+}
+
 export default function SemesterCgpaTab({
   subjects,
   manualForm,
@@ -50,7 +60,7 @@ export default function SemesterCgpaTab({
                     key={subject.id}
                     className="flex flex-col sm:flex-row items-end gap-3 rounded-2xl border border-border bg-surface-2/40 p-3 shadow-sm transition-colors hover:border-primary/30"
                   >
-                    <div className="flex-1 w-full min-w-[140px]">
+                    <div className="flex-1 w-full min-w-35">
                       <Input
                         label="Subject Name"
                         value={subject.name}
@@ -60,7 +70,7 @@ export default function SemesterCgpaTab({
                         placeholder="e.g. Data Structures"
                       />
                     </div>
-                    <div className="w-full sm:w-[130px] shrink-0">
+                    <div className="w-full sm:w-32.5 shrink-0">
                       <Select
                         label="Result"
                         value={subject.gpa.toString()}
@@ -70,14 +80,17 @@ export default function SemesterCgpaTab({
                         options={gradeOptions}
                       />
                     </div>
-                    <div className="flex flex-col w-full sm:w-[120px] shrink-0 gap-1">
+                    <div className="flex flex-col w-full sm:w-30 shrink-0 gap-1">
                       <label className="text-sm font-medium text-muted">
                         Credit
                       </label>
                       <div className="flex h-11 w-full items-center justify-between rounded-xl border border-border bg-surface px-2 shadow-sm">
-                        <span className="w-6 select-none text-center text-sm font-semibold text-fg tabular-nums">
-                          {Number(subject.credit || 0).toFixed(1)}
-                        </span>
+                        <input
+                          type="number"
+                          className="w-10 bg-transparent text-center text-sm font-semibold text-fg tabular-nums outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          value={subject.credit === "" ? "" : Number(subject.credit || 0).toFixed(1)}
+                          onChange={(e) => onUpdateSubject(subject.id, { credit: e.target.value })}
+                        />
                         <div className="h-4 w-px bg-border/60" />
                         <div className="flex items-center gap-1.5">
                           <button
@@ -125,8 +138,8 @@ export default function SemesterCgpaTab({
             )}
 
             {/* Empty state or Add New row */}
-            <div className="mt-4 flex flex-col sm:flex-row items-end gap-3 rounded-2xl border border-dashed border-primary/40 bg-primary/5 p-4">
-              <div className="flex-1 w-full min-w-[140px]">
+            <div className="mt-4 flex flex-col sm:flex-row items-start gap-4 rounded-2xl border border-dashed border-primary/40 bg-primary/5 p-4">
+              <div className="flex-1 w-full min-w-35">
                 <Input
                   label="Subject Name"
                   value={manualForm.name}
@@ -134,20 +147,47 @@ export default function SemesterCgpaTab({
                   placeholder="New Subject"
                 />
               </div>
-              <div className="w-full sm:w-[130px] shrink-0">
+              <div className="w-full sm:w-32.5 shrink-0">
                 <Select
                   label="Result"
                   value={manualForm.gpa.toString()}
                   onChange={(value) => onManualFormChange("gpa", value)}
                   options={gradeOptions}
                 />
+                <div className="mt-2 flex w-full justify-between gap-1">
+                  <button
+                    type="button"
+                    onClick={() => onManualFormChange("gpa", "4")}
+                    className="flex-1 rounded border border-border bg-surface px-1 py-1 text-[10px] font-semibold text-muted transition hover:border-primary hover:text-primary"
+                  >
+                    A+
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onManualFormChange("gpa", "3.75")}
+                    className="flex-1 rounded border border-border bg-surface px-1 py-1 text-[10px] font-semibold text-muted transition hover:border-primary hover:text-primary"
+                  >
+                    A
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onManualFormChange("gpa", "3.5")}
+                    className="flex-1 rounded border border-border bg-surface px-1 py-1 text-[10px] font-semibold text-muted transition hover:border-primary hover:text-primary"
+                  >
+                    A-
+                  </button>
+                </div>
               </div>
-              <div className="flex flex-col w-full sm:w-[120px] shrink-0 gap-1">
+              <div className="flex flex-col w-full sm:w-30 shrink-0 gap-1">
                 <label className="text-sm font-medium text-muted">Credit</label>
                 <div className="flex h-11 w-full items-center justify-between rounded-xl border border-border bg-surface px-2 shadow-sm">
-                  <span className="w-6 select-none text-center text-sm font-semibold text-fg tabular-nums">
-                    {Number(manualForm.credit || 0).toFixed(1)}
-                  </span>
+                  <input
+                    type="number"
+                    className="w-10 bg-transparent text-center text-sm font-semibold text-fg tabular-nums outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    value={manualForm.credit === "" ? "" : Number(manualForm.credit || 0).toFixed(1)}
+                    onChange={(e) => onManualFormChange("credit", e.target.value)}
+                    placeholder="0.0"
+                  />
                   <div className="h-4 w-px bg-border/60" />
                   <div className="flex items-center gap-1.5">
                     <button
@@ -182,6 +222,29 @@ export default function SemesterCgpaTab({
                     </button>
                   </div>
                 </div>
+                <div className="mt-1 flex w-full justify-between gap-1">
+                  <button
+                    type="button"
+                    onClick={() => onManualFormChange("credit", "1")}
+                    className="flex-1 rounded border border-border bg-surface px-1 py-1 text-[10px] font-semibold text-muted transition hover:border-primary hover:text-primary"
+                  >
+                    1.0
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onManualFormChange("credit", "1.5")}
+                    className="flex-1 rounded border border-border bg-surface px-1 py-1 text-[10px] font-semibold text-muted transition hover:border-primary hover:text-primary"
+                  >
+                    1.5
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onManualFormChange("credit", "3")}
+                    className="flex-1 rounded border border-border bg-surface px-1 py-1 text-[10px] font-semibold text-muted transition hover:border-primary hover:text-primary"
+                  >
+                    3.0
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -196,7 +259,7 @@ export default function SemesterCgpaTab({
 
           {/* Right Side: 1/3 - Total Semester CGPA */}
           <div className="flex flex-col lg:w-1/3 lg:max-w-[320px] shrink-0 gap-6 lg:border-l lg:border-border lg:pl-6">
-            <Card className="flex flex-col items-center justify-center py-10 px-4 text-center bg-gradient-to-b from-surface-2 to-surface border-primary/20">
+            <Card className="flex flex-col items-center justify-center py-10 px-4 text-center bg-linear-to-b from-surface-2 to-surface border-primary/20">
               <p className="text-sm font-bold uppercase tracking-widest text-muted">
                 Total SGPA
               </p>
@@ -208,6 +271,11 @@ export default function SemesterCgpaTab({
                   / 4.00
                 </span>
               </div>
+              {semesterStats.cgpa > 0 && (
+                <p className="mt-2 text-sm font-semibold tracking-wide text-primary">
+                  {getRemark(semesterStats.cgpa)}
+                </p>
+              )}
               <p className="mt-4 rounded-full bg-surface-2 px-3 py-1 text-xs font-semibold text-muted shadow-inner ring-1 ring-inset ring-border/50">
                 Based on {semesterStats.credits.toFixed(1)} Credits
               </p>

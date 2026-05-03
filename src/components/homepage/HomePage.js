@@ -37,14 +37,14 @@ const initialEstimationForm = {
 
 const initialManualSubject = {
   name: "",
-  credit: 3,
-  gpa: 3.0,
+  credit: "",
+  gpa: "",
 };
 
 const initialManualSemester = {
   name: "",
-  cgpa: 0,
-  credits: 15,
+  cgpa: "",
+  credits: "",
 };
 
 const MAX_MARKS = {
