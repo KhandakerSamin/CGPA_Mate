@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Card, Input, SectionCard } from "./ui";
+import { Button, Input, SectionCard } from "./ui";
 
 function round1(value) {
   return Math.round(value * 10) / 10;
@@ -254,7 +254,7 @@ export default function TotalCgpaTab({
           </div>
 
           {/* Right Side: 1/3 - Redesigned Total CGPA Panel */}
-          <div className="flex flex-col lg:w-1/3 lg:max-w-[300px] shrink-0 lg:border-l lg:border-border lg:pl-6">
+          <div className="flex flex-col lg:w-1/3 lg:max-w-75 shrink-0 lg:border-l lg:border-border lg:pl-6">
             <div className="rounded-2xl border border-border bg-surface-2/60 overflow-hidden shadow-sm">
 
               {/* Header strip */}
