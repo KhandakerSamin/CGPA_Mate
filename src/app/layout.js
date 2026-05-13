@@ -12,8 +12,48 @@ const sora = Sora({
 });
 
 export const metadata = {
-  title: "CGPA Mate",
-  description: "A connected CGPA planning workspace for students.",
+  metadataBase: new URL("https://cgpamate.vercel.app"),
+  title: "CGPA Mate | Best CGPA & SGPA Calculator Online",
+  description: "The ultimate connected CGPA planning workspace for students. Calculate your semester SGPA, estimate your subject results effortlessly, and track your overall academic progress.",
+  keywords: [
+    "cgpa calculator",
+    "sgpa calculator",
+    "gpa calculator",
+    "result calculation",
+    "semester result",
+    "university cgpa calculator",
+    "college grade tracking",
+    "grading system",
+    "cgpa mate",
+    "academic planner"
+  ],
+  authors: [{ name: "CGPA Mate" }],
+  creator: "CGPA Mate",
+  openGraph: {
+    title: "CGPA Mate | Best CGPA & SGPA Calculator",
+    description: "Calculate your semester GPA, estimate subject results, and track your overall academic progress smoothly.",
+    url: "https://cgpamate.vercel.app",
+    siteName: "CGPA Mate",
+    locale: "en_US",
+    type: "website",
+    images: [
+      {
+        url: "/logo.png",
+        width: 800,
+        height: 600,
+        alt: "CGPA Mate Logo",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "CGPA Mate | Best CGPA & SGPA Calculator",
+    description: "Calculate your semester GPA, estimate subject results, and track your overall academic progress smoothly.",
+    images: ["/logo.png"],
+  },
+  alternates: {
+    canonical: "https://cgpamate.vercel.app",
+  },
   icons: {
     icon: "/favicon.png",
   },

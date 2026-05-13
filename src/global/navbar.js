@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { Sun, Moon } from "lucide-react";
 
 const THEME_KEY = "cgpaMate_theme";
 
@@ -69,16 +70,16 @@ export default function Navbar({ onOpenAbout, onOpenContact }) {
               onClick={toggleTheme}
               aria-label="Toggle theme"
             >
-              <div className="flex w-full justify-between px-1.5 text-xs">
-                <span className="opacity-70">☀️</span>
-                <span className="opacity-70">🌙</span>
+              <div className="flex w-full justify-between px-1.5 text-muted">
+                <Sun size={14} className="opacity-70" />
+                <Moon size={14} className="opacity-70" />
               </div>
               <div
                 className={`absolute left-1 top-1 h-8 w-8 rounded-full shadow border border-border flex items-center justify-center transition-all bg-white dark:bg-surface-2 duration-300 ease-in-out ${
                   theme === "dark" ? "translate-x-10" : "translate-x-0"
                 }`}
               >
-                {theme === "dark" ? <span className="text-[14px]">🌙</span> : <span className="text-[14px]">☀️</span>}
+                {theme === "dark" ? <Moon size={14} className="text-fg" /> : <Sun size={14} className="text-fg" />}
               </div>
             </button>
             <button
@@ -111,11 +112,10 @@ export default function Navbar({ onOpenAbout, onOpenContact }) {
               <Image
                 src={theme === "dark" ? "/logo-dark.png" : "/logo.png"}
                 alt="CGPA Mate Logo"
-                width={56}
-                height={56}
-                className="rounded-2xl shadow-sm"
+                width={150}
+                height={120}
+                className="w-full"
               />
-              <h2 className="text-xl font-bold font-logo">CGPA Mate</h2>
             </div>
 
             <div className="w-full flex flex-col gap-3">
@@ -146,16 +146,16 @@ export default function Navbar({ onOpenAbout, onOpenContact }) {
                 onClick={toggleTheme}
                 aria-label="Toggle theme"
               >
-                <div className="flex w-full justify-between px-2 text-base">
-                  <span className="opacity-70">☀️</span>
-                  <span className="opacity-70">🌙</span>
+                <div className="flex w-full justify-between px-2.5 text-muted">
+                  <Sun size={20} className="opacity-70" />
+                  <Moon size={20} className="opacity-70" />
                 </div>
                 <div
                   className={`absolute left-1.5 top-1.5 h-11 w-11 rounded-full shadow-md border border-border flex items-center justify-center transition-all bg-white dark:bg-surface duration-300 ease-in-out ${
                     theme === "dark" ? "translate-x-14" : "translate-x-0"
                   }`}
                 >
-                  {theme === "dark" ? <span className="text-lg">🌙</span> : <span className="text-lg">☀️</span>}
+                  {theme === "dark" ? <Moon size={20} className="text-fg" /> : <Sun size={20} className="text-fg" />}
                 </div>
               </button>
             </div>
