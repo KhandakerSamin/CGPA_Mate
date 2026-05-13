@@ -20,7 +20,7 @@ export default function ContactPanel({ open, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-lg overflow-hidden rounded-[2rem] border border-border/60 bg-surface shadow-2xl">
+      <div className="relative w-full max-w-lg overflow-hidden rounded-4xl border border-border/60 bg-surface shadow-2xl">
         <div className="absolute right-4 top-4">
           <Button variant="ghost" onClick={onClose} className="h-10 w-10 p-0 rounded-full hover:bg-surface-2 text-muted hover:text-fg">
             ✕
@@ -36,7 +36,7 @@ export default function ContactPanel({ open, onClose }) {
               Share Feedback
             </h2>
             <p className="mt-2 text-sm text-muted">
-              We'd love to hear your thoughts or feature requests.
+              We&apos;d love to hear your thoughts or feature requests.
             </p>
           </div>
 
@@ -73,7 +73,7 @@ export default function ContactPanel({ open, onClose }) {
             <Button variant="ghost" onClick={onClose} className="text-muted hover:text-fg">
               Cancel
             </Button>
-            <Button variant="primary" onClick={handleSubmit} className="min-w-[130px]">
+            <Button variant="primary" onClick={handleSubmit} className="min-w-32.5">
               {isSubmitting ? "Sending..." : "Send Message"}
             </Button>
           </div>

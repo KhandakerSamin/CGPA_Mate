@@ -14,6 +14,9 @@ const sora = Sora({
 export const metadata = {
   title: "CGPA Mate",
   description: "A connected CGPA planning workspace for students.",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({ children }) {
