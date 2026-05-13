@@ -138,17 +138,18 @@ export default function TotalCgpaTab({
                         placeholder="e.g. 3.75"
                       />
                     </div>
-                    <div className="flex flex-col w-full sm:w-30 shrink-0 gap-1">
+                    <div className="flex flex-col w-full sm:w-auto shrink-0 gap-1">
                       <label className="text-sm font-medium text-muted">Credits</label>
-                      <div className="flex h-11 w-full items-center justify-between rounded-xl border border-border bg-surface px-2 shadow-sm">
-                        <input
-                          type="number"
-                          className="w-10 bg-transparent text-center text-sm font-semibold text-fg tabular-nums outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                          value={semester.credits === "" ? "" : Number(semester.credits || 0).toFixed(1)}
-                          onChange={(e) => onUpdateSemester(semester.id, { credits: e.target.value })}
-                        />
-                        <div className="h-4 w-px bg-border/60" />
-                        <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-11 w-16 items-center justify-center rounded-xl border border-border bg-surface shadow-sm px-2">
+                          <input
+                            type="number"
+                            className="w-full bg-transparent text-center text-sm font-semibold text-fg tabular-nums outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            value={semester.credits}
+                            onChange={(e) => onUpdateSemester(semester.id, { credits: e.target.value })}
+                          />
+                        </div>
+                        <div className="flex items-center gap-1">
                           <button
                             type="button"
                             onClick={() =>
@@ -156,7 +157,7 @@ export default function TotalCgpaTab({
                                 credits: Math.max(0, round1(Number(semester.credits || 0) - 1)),
                               })
                             }
-                            className="flex h-7 w-7 items-center justify-center rounded-md border border-primary/40 bg-primary/10 text-sm font-bold text-primary transition hover:bg-primary hover:text-white active:scale-95"
+                            className="flex h-9 w-9 items-center justify-center rounded-xl border border-primary/20 bg-primary/5 hover:border-primary/40 hover:bg-primary/10 text-lg font-bold text-primary transition active:scale-95"
                           >
                             −
                           </button>
@@ -167,7 +168,7 @@ export default function TotalCgpaTab({
                                 credits: Math.min(200, round1(Number(semester.credits || 0) + 1)),
                               })
                             }
-                            className="flex h-7 w-7 items-center justify-center rounded-md border border-primary/40 bg-primary/10 text-sm font-bold text-primary transition hover:bg-primary hover:text-white active:scale-95"
+                            className="flex h-9 w-9 items-center justify-center rounded-xl border border-primary/20 bg-primary/5 hover:border-primary/40 hover:bg-primary/10 text-lg font-bold text-primary transition active:scale-95"
                           >
                             +
                           </button>
@@ -209,24 +210,25 @@ export default function TotalCgpaTab({
                   placeholder="3.50"
                 />
               </div>
-              <div className="flex flex-col w-full sm:w-30 shrink-0 gap-1">
+              <div className="flex flex-col w-full sm:w-auto shrink-0 gap-1">
                 <label className="text-sm font-medium text-muted">Credits</label>
-                <div className="flex h-11 w-full items-center justify-between rounded-xl border border-border bg-surface px-2 shadow-sm">
-                  <input
-                    type="number"
-                    className="w-10 bg-transparent text-center text-sm font-semibold text-fg tabular-nums outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    value={newSemesterForm.credits === "" ? "" : Number(newSemesterForm.credits || 0).toFixed(1)}
-                    onChange={(e) => onNewSemesterChange("credits", e.target.value)}
-                    placeholder="0.0"
-                  />
-                  <div className="h-4 w-px bg-border/60" />
-                  <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-11 w-16 items-center justify-center rounded-xl border border-border bg-surface shadow-sm px-2">
+                    <input
+                      type="number"
+                      className="w-full bg-transparent text-center text-sm font-semibold text-fg tabular-nums outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      value={newSemesterForm.credits}
+                      onChange={(e) => onNewSemesterChange("credits", e.target.value)}
+                      placeholder="0.0"
+                    />
+                  </div>
+                  <div className="flex items-center gap-1">
                     <button
                       type="button"
                       onClick={() =>
                         onNewSemesterChange("credits", Math.max(0, round1(Number(newSemesterForm.credits || 0) - 1)))
                       }
-                      className="flex h-7 w-7 items-center justify-center rounded-md border border-primary/40 bg-primary/10 text-sm font-bold text-primary transition hover:bg-primary hover:text-white active:scale-95"
+                      className="flex h-9 w-9 items-center justify-center rounded-xl border border-primary/20 bg-primary/5 hover:border-primary/40 hover:bg-primary/10 text-lg font-bold text-primary transition active:scale-95"
                     >
                       −
                     </button>
@@ -235,7 +237,7 @@ export default function TotalCgpaTab({
                       onClick={() =>
                         onNewSemesterChange("credits", Math.min(200, round1(Number(newSemesterForm.credits || 0) + 1)))
                       }
-                      className="flex h-7 w-7 items-center justify-center rounded-md border border-primary/40 bg-primary/10 text-sm font-bold text-primary transition hover:bg-primary hover:text-white active:scale-95"
+                      className="flex h-9 w-9 items-center justify-center rounded-xl border border-primary/20 bg-primary/5 hover:border-primary/40 hover:bg-primary/10 text-lg font-bold text-primary transition active:scale-95"
                     >
                       +
                     </button>
