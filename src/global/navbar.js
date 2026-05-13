@@ -47,23 +47,33 @@ export default function Navbar({ onOpenAbout, onOpenContact }) {
         </div>
         <div className="flex items-center gap-2">
           <button
-            className="rounded-full border border-border px-4 py-2 text-sm font-semibold text-fg transition hover:border-primary hover:text-primary"
+            className="hidden sm:inline-flex rounded-full border border-border bg-surface px-4 py-2 text-sm font-semibold text-fg transition hover:border-primary/50 hover:bg-surface-2 hover:text-primary active:scale-95"
             onClick={onOpenAbout}
           >
             About
           </button>
           <button
-            className="rounded-full border border-border px-4 py-2 text-sm font-semibold text-fg transition hover:border-primary hover:text-primary"
+            className="hidden sm:inline-flex rounded-full border border-border bg-surface px-4 py-2 text-sm font-semibold text-fg transition hover:border-primary/50 hover:bg-surface-2 hover:text-primary active:scale-95"
             onClick={onOpenContact}
           >
             Contact
           </button>
           <button
-            className="rounded-full bg-surface-2 px-4 py-2 text-sm font-semibold text-fg transition hover:bg-surface-2/70"
+            className="relative flex h-10 w-20 items-center rounded-full border border-border bg-surface px-1 transition hover:border-primary/30 active:scale-95 focus:outline-none"
             onClick={toggleTheme}
             aria-label="Toggle theme"
           >
-            {theme === "dark" ? "Light" : "Dark"}
+            <div className="flex w-full justify-between px-1.5 text-xs">
+              <span className="opacity-70">☀️</span>
+              <span className="opacity-70">🌙</span>
+            </div>
+            <div
+              className={`absolute left-1 top-1 h-8 w-8 rounded-full shadow border border-border flex items-center justify-center transition-all bg-white dark:bg-surface-2 duration-300 ease-in-out ${
+                theme === "dark" ? "translate-x-10" : "translate-x-0"
+              }`}
+            >
+              {theme === "dark" ? <span className="text-[14px]">🌙</span> : <span className="text-[14px]">☀️</span>}
+            </div>
           </button>
         </div>
       </div>

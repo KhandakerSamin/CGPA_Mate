@@ -7,7 +7,7 @@ import { Button, Input, SectionCard } from "./ui";
 const MAX = {
   assignment: 5,
   presentation: 8,
-  attendance: 7,
+  attendance: 0,
   quiz: 15,
   mid: 25,
   final: 40,

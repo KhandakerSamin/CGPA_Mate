@@ -5,54 +5,78 @@ import { Button, Input } from "@/components/homepage/ui";
 
 export default function ContactPanel({ open, onClose }) {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!open) return null;
 
+  const handleSubmit = () => {
+    setIsSubmitting(true);
+    setTimeout(() => {
+      setIsSubmitting(false);
+      onClose();
+      setForm({ name: "", email: "", message: "" });
+    }, 800);
+  };
+
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4 backdrop-blur">
-      <div className="w-full max-w-2xl rounded-[28px] border border-border bg-surface p-6 shadow-2xl">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-xs uppercase tracking-[0.25em] text-muted">
-              Contact
-            </p>
-            <h2 className="mt-2 text-2xl font-semibold text-fg">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="relative w-full max-w-lg overflow-hidden rounded-[2rem] border border-border/60 bg-surface shadow-2xl">
+        <div className="absolute right-4 top-4">
+          <Button variant="ghost" onClick={onClose} className="h-10 w-10 p-0 rounded-full hover:bg-surface-2 text-muted hover:text-fg">
+            ✕
+          </Button>
+        </div>
+
+        <div className="p-8 sm:p-10">
+          <div className="mb-8 text-center sm:text-left">
+            <span className="inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-primary mb-4">
+              Get In Touch
+            </span>
+            <h2 className="text-3xl font-black tracking-tight text-fg">
               Share Feedback
             </h2>
+            <p className="mt-2 text-sm text-muted">
+              We'd love to hear your thoughts or feature requests.
+            </p>
           </div>
-          <Button variant="ghost" onClick={onClose}>
-            Close
-          </Button>
-        </div>
-        <div className="mt-5 grid gap-4 sm:grid-cols-2">
-          <Input
-            label="Name"
-            value={form.name}
-            onChange={(value) => setForm((prev) => ({ ...prev, name: value }))}
-            placeholder=""
-          />
-          <Input
-            label="Email"
-            value={form.email}
-            onChange={(value) => setForm((prev) => ({ ...prev, email: value }))}
-            placeholder=""
-          />
-        </div>
-        <label className="mt-4 flex flex-col gap-2 text-sm">
-          <span className="font-medium text-fg">Message</span>
-          <textarea
-            className="min-h-30 rounded-2xl border border-border bg-surface px-3 py-2 text-sm text-fg shadow-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-ring"
-            placeholder="Tell us what would make CGPA Mate even better."
-            value={form.message}
-            onChange={(event) =>
-              setForm((prev) => ({ ...prev, message: event.target.value }))
-            }
-          />
-        </label>
-        <div className="mt-4 flex justify-end">
-          <Button variant="outline" onClick={onClose}>
-            Send Message
-          </Button>
+
+          <div className="space-y-5">
+            <div className="grid gap-5 sm:grid-cols-2">
+              <Input
+                label="Name"
+                value={form.name}
+                onChange={(value) => setForm((prev) => ({ ...prev, name: value }))}
+                placeholder="John Doe"
+              />
+              <Input
+                label="Email"
+                value={form.email}
+                onChange={(value) => setForm((prev) => ({ ...prev, email: value }))}
+                placeholder="john@example.com"
+              />
+            </div>
+            
+            <label className="flex flex-col gap-1.5 text-sm">
+              <span className="font-semibold text-fg ml-1">Message</span>
+              <textarea
+                className="min-h-32 w-full resize-none rounded-2xl border border-border/70 bg-surface-2/50 px-4 py-3 text-sm text-fg shadow-sm outline-none transition placeholder:text-muted/60 focus:border-primary focus:bg-surface focus:ring-4 focus:ring-primary/10"
+                placeholder="Tell us what would make CGPA Mate even better..."
+                value={form.message}
+                onChange={(event) =>
+                  setForm((prev) => ({ ...prev, message: event.target.value }))
+                }
+              />
+            </label>
+          </div>
+
+          <div className="mt-8 flex justify-end gap-3">
+            <Button variant="ghost" onClick={onClose} className="text-muted hover:text-fg">
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={handleSubmit} className="min-w-[130px]">
+              {isSubmitting ? "Sending..." : "Send Message"}
+            </Button>
+          </div>
         </div>
       </div>
     </div>
