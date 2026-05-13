@@ -9,7 +9,7 @@ import ResultEstimationTab from "./ResultEstimationTab";
 import SemesterCgpaTab from "./SemesterCgpaTab";
 import TotalCgpaTab from "./TotalCgpaTab";
 import { calculateWeightedGpa, gradeFromScore } from "@/lib/cgpa";
-import { Button, ToastStack, useToasts } from "./ui";
+import {  ToastStack, useToasts } from "./ui";
 import { useLocalStorage } from "./useLocalStorage";
 
 const TABS = [
@@ -346,11 +346,11 @@ export default function HomePage() {
           <p className="text-xs font-bold uppercase tracking-[0.3em] text-primary">
             CGPA Mate
           </p>
-          <div className="max-w-2xl">
-            <h1 className="text-3xl font-bold tracking-tight text-fg sm:text-5xl lg:text-6xl">
+          <div className="max-w-6xl">
+            <h1 className="text-2xl font-bold tracking-tight text-fg sm:text-4xl lg:text-5xl">
               Build your CGPA with confidence.
             </h1>
-            <p className="mt-4 text-sm leading-relaxed text-muted sm:text-base lg:text-lg">
+            <p className="mt-4 text-sm leading-relaxed text-muted sm:text-base lg:text-base">
               Estimate grades, convert them into semester CGPA, and keep a
               clear view of your cumulative progress in one connected flow.
             </p>
@@ -366,17 +366,17 @@ export default function HomePage() {
                   className={`
                     relative flex items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold transition-all duration-300
                     ${isActive 
-                        ? "bg-primary text-primary-fg shadow-lg shadow-primary/25 scale-105" 
-                        : "bg-surface/50 text-muted hover:bg-surface hover:text-fg"}
+                        ? "bg-primary text-primary-fg shadow-lg shadow-primary/25 scale-105 text-white" 
+                        : "bg-surface text-muted hover:bg-surface hover:text-fg"}
                     ${isEstimation && !isActive
-                        ? "border border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.15)] group"
+                        ? "border border-amber-500/50  group"
                         : isActive && isEstimation 
-                        ? "border border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.3)]"
+                        ? " shadow-[0_0_20px_rgba(245,158,11,0.3)]"
                         : "border border-border/50"}
                   `}
                 >
                   {isEstimation && (
-                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm ring-2 ring-bg">
+                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-linear-to-r from-amber-500 to-orange-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm ring-2 ring-bg">
                       New Feature
                     </span>
                   )}
