@@ -102,7 +102,7 @@ function calculateEstimationTotal(form) {
 }
 
 export default function HomePage() {
-  const [activeTab, setActiveTab] = useState("estimation");
+  const [activeTab, setActiveTab] = useState("semester");
   const [showAbout, setShowAbout] = useState(false);
   const [showContact, setShowContact] = useState(false);
 
@@ -294,7 +294,7 @@ export default function HomePage() {
       credits: semesterStats.credits || 0,
     };
 
-    setSemesters((current) => [newSemester, ...current]);
+    setSemesters((current) => [...current, newSemester]);
     addToast("Semester added to Total CGPA", "success");
     setActiveTab("total");
   };
@@ -324,7 +324,7 @@ export default function HomePage() {
       credits: manualSemesterForm.credits,
     };
 
-    setSemesters((current) => [newSemester, ...current]);
+    setSemesters((current) => [...current, newSemester]);
     setManualSemesterForm(initialManualSemester);
     addToast("Semester Added", "success");
   };
@@ -342,31 +342,48 @@ export default function HomePage() {
         onOpenContact={() => setShowContact(true)}
       />
       <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 py-10 sm:px-6">
-        <header className="space-y-4">
-          <p className="text-xs uppercase tracking-[0.3em] text-muted">
+        <header className="mb-6 flex flex-col items-center justify-center space-y-5 text-center">
+          <p className="text-xs font-bold uppercase tracking-[0.3em] text-primary">
             CGPA Mate
           </p>
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <h1 className="text-3xl font-semibold text-fg sm:text-4xl">
-                Build your CGPA with confidence.
-              </h1>
-              <p className="mt-2 max-w-2xl text-sm text-muted sm:text-base">
-                Estimate grades, convert them into semester CGPA, and keep a
-                clear view of your cumulative progress in one connected flow.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {TABS.map((tab) => (
-                <Button
+          <div className="max-w-2xl">
+            <h1 className="text-3xl font-bold tracking-tight text-fg sm:text-5xl lg:text-6xl">
+              Build your CGPA with confidence.
+            </h1>
+            <p className="mt-4 text-sm leading-relaxed text-muted sm:text-base lg:text-lg">
+              Estimate grades, convert them into semester CGPA, and keep a
+              clear view of your cumulative progress in one connected flow.
+            </p>
+          </div>
+          <div className="mt-4 flex flex-wrap justify-center gap-3 sm:gap-4 p-2">
+            {TABS.map((tab) => {
+              const isActive = activeTab === tab.id;
+              const isEstimation = tab.id === "estimation";
+              return (
+                <button
                   key={tab.id}
-                  variant={activeTab === tab.id ? "primary" : "subtle"}
                   onClick={() => setActiveTab(tab.id)}
+                  className={`
+                    relative flex items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold transition-all duration-300
+                    ${isActive 
+                        ? "bg-primary text-primary-fg shadow-lg shadow-primary/25 scale-105" 
+                        : "bg-surface/50 text-muted hover:bg-surface hover:text-fg"}
+                    ${isEstimation && !isActive
+                        ? "border border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.15)] group"
+                        : isActive && isEstimation 
+                        ? "border border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.3)]"
+                        : "border border-border/50"}
+                  `}
                 >
+                  {isEstimation && (
+                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm ring-2 ring-bg">
+                      New Feature
+                    </span>
+                  )}
                   {tab.label}
-                </Button>
-              ))}
-            </div>
+                </button>
+              );
+            })}
           </div>
         </header>
 
