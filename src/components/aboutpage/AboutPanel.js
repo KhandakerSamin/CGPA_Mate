@@ -36,10 +36,12 @@ export default function AboutPanel({ open, onClose }) {
             
             <div className="rounded-2xl border border-border/50 bg-surface-2/30 p-5">
               <h3 className="mb-2 font-semibold text-fg flex items-center gap-2">
-                <span className="text-xl">✨</span> Design Focus
+                <span className="text-xl">👨‍💻</span> Developer
               </h3>
-              <p className="text-sm leading-relaxed text-muted">
-                The experience is designed for mobile-first clarity, smooth transitions, and an elegant card-based layout so you can focus entirely on mapping out your outcomes.
+              <p className="text-sm font-medium text-fg">Khandaker Samin Yeasar</p>
+              <p className="text-xs leading-relaxed text-muted mt-1">
+                SWE-42<br />
+                Daffodil International University (DIU)
               </p>
             </div>
           </div>

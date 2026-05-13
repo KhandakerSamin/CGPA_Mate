@@ -6,7 +6,10 @@ export default function Footer() {
         <div className="flex items-center gap-3">
           <span>Built for focused, mobile-first CGPA planning.</span>
         </div>
-        <span>CGPA Mate &copy; {new Date().getFullYear()}</span>
+        <div className="flex flex-col items-center sm:items-end gap-1">
+          <span>CGPA Mate &copy; {new Date().getFullYear()}</span>
+          <span className="text-xs text-muted/70">Design and Developed by Samin</span>
+        </div>
       </div>
     </footer>
   );
